@@ -4,26 +4,49 @@
 //
 //  Created by Vincent Saluzzo on 08/12/2023.
 //
-
 import SwiftUI
 
 struct SleepHistoryView: View {
     @ObservedObject var viewModel: SleepHistoryViewModel
 
-        var body: some View {
-            List(viewModel.sleepSessions) { session in
-                HStack {
-                    QualityIndicator(quality: session.quality)
-                        .padding()
-                    VStack(alignment: .leading) {
-                        Text("Début : \(session.startDate.formatted())")
-                        Text("Durée : \(session.duration/60) heures")
+    var body: some View {
+        NavigationView {
+            ZStack {
+                AppTheme.background
+                    .ignoresSafeArea()
+
+                List(viewModel.sleepSessions) { session in
+                    HStack(alignment: .top, spacing: 14) {
+
+                        QualityIndicator(quality: Int(session.quality))
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Sommeil")
+                                .font(.headline)
+
+                            Text("Début : \(session.startDate?.formatted() ?? "")")
+                                .font(.subheadline)
+                                .foregroundColor(AppTheme.textSecondary)
+
+                            Text("Durée : \(Int(session.duration) / 60) heures")
+                                .font(.subheadline)
+                                .foregroundColor(AppTheme.textSecondary)
+                        }
+
+                        Spacer()
                     }
+                    .padding(.vertical, 8)
+                    .listRowBackground(AppTheme.cardBackground)
                 }
+                .scrollContentBackground(.hidden)
+                .background(AppTheme.background)
             }
-            .navigationTitle("Historique de Sommeil")
+            .navigationTitle("Historique de sommeil")
         }
+    }
 }
+
+// MARK: - Indicator
 
 struct QualityIndicator: View {
     let quality: Int
@@ -31,24 +54,25 @@ struct QualityIndicator: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(qualityColor(quality), lineWidth: 5)
-                .foregroundColor(qualityColor(quality))
-                .frame(width: 30, height: 30)
+                .stroke(qualityColor(quality), lineWidth: 4)
+                .frame(width: 32, height: 32)
+
             Text("\(quality)")
+                .font(.caption)
                 .foregroundColor(qualityColor(quality))
         }
     }
 
     func qualityColor(_ quality: Int) -> Color {
-        switch (10-quality) {
-        case 0...3:
-            return .green
-        case 4...6:
-            return .yellow
-        case 7...10:
-            return .red
+        switch quality {
+        case 8...10:
+            return AppTheme.primary
+        case 5...7:
+            return AppTheme.secondary
+        case 0...4:
+            return AppTheme.border
         default:
-            return .gray
+            return AppTheme.textSecondary
         }
     }
 }

@@ -5,12 +5,13 @@
 //  Created by Vincent Saluzzo on 08/12/2023.
 //
 
-import Foundation
+import SwiftUI
 import CoreData
 
 class UserDataViewModel: ObservableObject {
     @Published var firstName: String = ""
     @Published var lastName: String = ""
+    @Published var email: String = ""
 
     private var viewContext: NSManagedObjectContext
 
@@ -20,8 +21,15 @@ class UserDataViewModel: ObservableObject {
     }
 
     private func fetchUserData() {
-        // TODO: fetch data in CoreData and replace dumb value below with appropriate information
-        firstName = "Charlotte"
-        lastName = "Corino"
+        do {
+            guard let user = try UserRepository(viewContext: viewContext).getUser() else {
+                return
+            }
+
+            firstName = user.firstName ?? ""
+            lastName = user.lastName ?? ""
+            email = user.email ?? ""
+        } catch {
+        }
     }
 }

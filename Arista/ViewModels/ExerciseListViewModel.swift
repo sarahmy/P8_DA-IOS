@@ -9,27 +9,41 @@ import Foundation
 
 import CoreData
 
+
 class ExerciseListViewModel: ObservableObject {
-    @Published var exercises = [FakeExercise]()
-
+    @Published var exercises = [Exercise]()
     var viewContext: NSManagedObjectContext
-
     init(context: NSManagedObjectContext) {
         self.viewContext = context
         fetchExercises()
     }
-
-    private func fetchExercises() {
-        // TODO: fetch data in CoreData and replace dumb value below with appropriate information
-        exercises = [FakeExercise(), FakeExercise(), FakeExercise()]
+    func fetchExercises() {
+        do {
+            let data = ExerciseRepository(viewContext: viewContext)
+            exercises = try data.getExercise()
+        } catch {
+            
+        }
+       
     }
-}
+    func deleteExercise(at offsets: IndexSet) {
+        do {
+            let repository = ExerciseRepository(viewContext: viewContext)
 
-struct FakeExercise: Identifiable {
-    var id = UUID()
-    
-    var category: String = "Football"
-    var duration: Int = 120
-    var intensity: Int = 8
-    var date: Date = Date()
-}
+            for index in offsets {
+                let exercise = exercises[index]
+                try repository.deleteExercise(exercise)
+            }
+
+            fetchExercises()
+        } catch {
+            print("Erreur suppression exercice : \(error)")
+        }
+    }
+
+    func reload() {
+        fetchExercises()
+    }
+    }
+
+

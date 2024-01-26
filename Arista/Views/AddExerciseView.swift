@@ -10,30 +10,54 @@ import SwiftUI
 struct AddExerciseView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var viewModel: AddExerciseViewModel
-
+    
     var body: some View {
         NavigationView {
             VStack {
                 Form {
-                    TextField("Catégorie", text: $viewModel.category)
-                    TextField("Heure de démarrage", text: $viewModel.startTime)
-                    TextField("Durée (en minutes)", text: $viewModel.duration)
-                    TextField("Intensité (0 à 10)", text: $viewModel.intensity)
-                }.formStyle(.grouped)
+                    Picker("Catégorie", selection: $viewModel.category) {
+                        Text("Football").tag("Football")
+                        Text("Natation").tag("Natation")
+                        Text("Running").tag("Running")
+                        Text("Marche").tag("Marche")
+                        Text("Cyclisme").tag("Cyclisme")
+                    }
+                    .pickerStyle(.menu)
+                    
+                    DatePicker(
+                        "Heure de démarrage",
+                        selection: $viewModel.startTime,
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    
+                    Stepper("Durée : \(viewModel.duration) min",
+                            value: $viewModel.duration,
+                            in: 0...300)
+                    
+                    Stepper("Intensité : \(viewModel.intensity)",
+                            value: $viewModel.intensity,
+                            in: 0...10)
+                }
+                .formStyle(.grouped)
+                
                 Spacer()
+                
+                
+                if !viewModel.errorMessage.isEmpty {
+                    Text(viewModel.errorMessage)
+                        .font(.footnote)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                
                 Button("Ajouter l'exercice") {
                     if viewModel.addExercise() {
                         presentationMode.wrappedValue.dismiss()
                     }
-                }.buttonStyle(.borderedProminent)
-                    
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .navigationTitle("Nouvel Exercice ...")
-            
         }
     }
-}
-
-#Preview {
-    AddExerciseView(viewModel: AddExerciseViewModel(context: PersistenceController.preview.container.viewContext))
 }

@@ -4,44 +4,79 @@
 //
 //  Created by Vincent Saluzzo on 08/12/2023.
 //
-
 import SwiftUI
 
 struct ExerciseListView: View {
     @ObservedObject var viewModel: ExerciseListViewModel
     @State private var showingAddExerciseView = false
-    
+
     var body: some View {
         NavigationView {
-            List(viewModel.exercises) { exercise in
-                HStack {
-                    Image(systemName: iconForCategory(exercise.category))
-                    VStack(alignment: .leading) {
-                        Text(exercise.category)
-                            .font(.headline)
-                        Text("Durée: \(exercise.duration) min")
-                            .font(.subheadline)
-                        Text(exercise.date.formatted())
-                            .font(.subheadline)
-                        
+            ZStack {
+                AppTheme.background
+                    .ignoresSafeArea()
+
+                List {
+                    ForEach(viewModel.exercises) { exercise in
+                        HStack(alignment: .top, spacing: 12) {
+
+                            Image(systemName: iconForCategory(exercise.category ?? ""))
+                                .font(.title3)
+                                .foregroundColor(AppTheme.primary)
+                                .frame(width: 36, height: 36)
+                                .background(AppTheme.secondary.opacity(0.2))
+                                .clipShape(Circle())
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(exercise.category ?? "Exercice")
+                                    .font(.headline)
+
+                                Text("Durée : \(Int(exercise.duration)) min")
+                                    .font(.subheadline)
+                                    .foregroundColor(AppTheme.textSecondary)
+
+                                Text(exercise.startDate?.formatted() ?? "")
+                                    .font(.caption)
+                                    .foregroundColor(AppTheme.textSecondary)
+                            }
+
+                            Spacer()
+                        }
+                        .padding(.vertical, 8)
+                        .listRowBackground(AppTheme.cardBackground)
                     }
-                    Spacer()
-                    IntensityIndicator(intensity: exercise.intensity)
+                    .onDelete(perform: viewModel.deleteExercise)
                 }
+                .scrollContentBackground(.hidden)
+                .background(AppTheme.background)
             }
             .navigationTitle("Exercices")
-            .navigationBarItems(trailing: Button(action: {
-                showingAddExerciseView = true
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingAddExerciseView = true
+                    }) {
+                        Image(systemName: "plus")
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(AppTheme.primary)
+                            .clipShape(Circle())
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddExerciseView, onDismiss: {
+                viewModel.reload()
             }) {
-                Image(systemName: "plus")
-            })
+                AddExerciseView(
+                    viewModel: AddExerciseViewModel(context: viewModel.viewContext)
+                )
+            }
+            .onAppear {
+                viewModel.reload()
+            }
         }
-        .sheet(isPresented: $showingAddExerciseView) {
-            AddExerciseView(viewModel: AddExerciseViewModel(context: viewModel.viewContext))
-        }
-        
     }
-    
+
     func iconForCategory(_ category: String) -> String {
         switch category {
         case "Football":
@@ -56,29 +91,6 @@ struct ExerciseListView: View {
             return "bicycle"
         default:
             return "questionmark"
-        }
-    }
-}
-
-struct IntensityIndicator: View {
-    var intensity: Int
-    
-    var body: some View {
-        Circle()
-            .fill(colorForIntensity(intensity))
-            .frame(width: 10, height: 10)
-    }
-    
-    func colorForIntensity(_ intensity: Int) -> Color {
-        switch intensity {
-        case 0...3:
-            return .green
-        case 4...6:
-            return .yellow
-        case 7...10:
-            return .red
-        default:
-            return .gray
         }
     }
 }
